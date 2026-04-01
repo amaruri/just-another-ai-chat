@@ -31,7 +31,9 @@ export function buildSystemPrompt(activeServers: string[]) {
     ${filesystemInstructions}
     ${fetchInstructions}
     You have NO memory between conversations.
-    If there is a "Context from memory" section in this prompt, use it to answer questions about past conversations or personal information.
+    If there is a "Context from memory" section in this prompt, those are facts the user has shared before.
+    Use them to answer naturally in second person. For example, if the context says "My favorite movie is Interestellar", respond "Your favorite movie is Interestellar".
+    Never repeat the context verbatim — always reformulate in second person.
     If the context contains the answer, respond directly and confidently. Do not say you need to search or look up anything.
     If there is no context, say you don't have that information.
     Do not say "I don't have access to personal information" — search first, then answer.`;

@@ -9,8 +9,9 @@ import { getPokemonInfo } from '@/app/lib/tools/getPokemonInfo';
 import { getDynamicTools } from '@/app/lib/mcp/mcp-dynamic';
 import { searchDocuments } from '@/app/lib/tools/search-documents';
 import { addDocument, queryDocuments } from '@/app/lib/ddbb/chroma';
+import { isWorthSaving } from '../../lib/worth-saving';
 
-const DISTANCE_THRESHOLD = 300;
+const SIMILARITY_THRESHOLD = 0.72;
 
 export async function POST(req: Request) {
   const { messages, activeServers = [] } = await req.json();
@@ -39,15 +40,15 @@ export async function POST(req: Request) {
   ]);
 
   // Filtrar por relevancia
-  const relevantDocs = docResults.filter(r => r.distance ?? Infinity < DISTANCE_THRESHOLD);
-  const relevantConvs = convResults.filter(r => r.distance ?? Infinity < DISTANCE_THRESHOLD);
+  const relevantDocs = docResults.filter(r => r.similarity ?? 0 < SIMILARITY_THRESHOLD);
+  const relevantConvs = convResults.filter(r => r.similarity ?? 0 < SIMILARITY_THRESHOLD);
 
   const ragContext = [
     relevantDocs.length > 0
-      ? `Relevant documents:\n${relevantDocs.map((r) => r.text).join('\n---\n')}`
+      ? `Facts from user documents:\n${relevantDocs.map((r) => r.text).join('\n---\n')}`
       : '',
     relevantConvs.length > 0
-      ? `Relevant past conversations:\n${relevantConvs.map((r) => r.text).join('\n---\n')}`
+      ? `Facts the user has shared in past conversations:\n${relevantConvs.map((r) => r.text).join('\n---\n')}`
       : '',
   ]
     .filter(Boolean)
@@ -104,6 +105,13 @@ export async function POST(req: Request) {
             .filter((p: { type: string }) => p.type === 'text')
             .map((p: { type: string; text: string }) => p.text)
             .join(' ');
+
+          const worthSaving = await isWorthSaving(userText);
+
+          if (!worthSaving) {
+            console.log('Conversación no es relevante, no se guardará');
+            return;
+          }
 
           await addDocument({
             collectionName: 'conversations',

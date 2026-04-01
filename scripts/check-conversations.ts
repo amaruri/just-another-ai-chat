@@ -3,7 +3,7 @@ import { queryDocuments } from '../app/lib/ddbb/chroma';
 async function main() {
   const results = await queryDocuments({
     collectionName: 'conversations',
-    text: 'cumpleaños',
+    text: 'mi nombre',
     topK: 3,
   });
 

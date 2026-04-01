@@ -2,13 +2,18 @@ import { ChromaClient } from 'chromadb';
 
 const client = new ChromaClient();
 
-async function embed(text: string): Promise<number[]> {
+async function embed(
+  text: string,
+  type: 'document' | 'query' = 'document'
+): Promise<number[]> {
+  const prefix = type === 'document' ? 'search_document' : 'search_query';
+
   const res = await fetch("http://localhost:11434/api/embeddings", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "nomic-embed-text",
-      prompt: text,
+      model: "mxbai-embed-large",
+      prompt: `${prefix}: ${text}`,
     }),
   });
 
@@ -40,7 +45,7 @@ export async function addDocument({
   metadata?: Record<string, string>;
 }) {
   const collection = await getCollection(collectionName);
-  const embedding = await embed(text);
+  const embedding = await embed(text, 'document');
 
   await collection.add({
     ids: [id],
@@ -60,19 +65,27 @@ export async function queryDocuments({
   topK?: number;
 }) {
   const collection = await getCollection(collectionName);
-  const embedding = await embed(text);
+  const embedding = await embed(text, 'query');
 
   const results = await collection.query({
     queryEmbeddings: [embedding],
     nResults: topK,
+    include: ['documents', 'metadatas', 'distances'],
   });
 
   // Devuelve los textos con su distancia
-  return results.documents[0].map((doc, i) => ({
-    text: doc,
-    distance: results.distances?.[0][i],
-    metadata: results.metadatas?.[0][i],
-  }));
+  return results.documents[0].map((doc, i) => {
+    const distance = results.distances?.[0][i] ?? Infinity;
+
+    const similarity = 1 / (1 + distance);
+
+    return {
+      text: doc,
+      distance,
+      similarity,
+      metadata: results.metadatas?.[0][i],
+    };
+  });
 }
 
 export async function deleteDocument({
