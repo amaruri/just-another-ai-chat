@@ -11,7 +11,7 @@ import { searchDocuments } from '@/app/lib/tools/search-documents';
 import { addDocument, queryDocuments } from '@/app/lib/ddbb/chroma';
 import { isWorthSaving } from '../../lib/worth-saving';
 
-const SIMILARITY_THRESHOLD = 0.72;
+const SIMILARITY_THRESHOLD = 0.56;
 
 export async function POST(req: Request) {
   const { messages, activeServers = [] } = await req.json();
@@ -39,9 +39,13 @@ export async function POST(req: Request) {
     queryDocuments({ collectionName: 'conversations', text: userText, topK: 3 }),
   ]);
 
+  console.log('--- SCORES ---');
+  docResults.forEach(r => console.log(r.similarity.toFixed(4), '|', r.text?.slice(0, 50)));
+  console.log('--------------');
+
   // Filtrar por relevancia
-  const relevantDocs = docResults.filter(r => r.similarity ?? 0 < SIMILARITY_THRESHOLD);
-  const relevantConvs = convResults.filter(r => r.similarity ?? 0 < SIMILARITY_THRESHOLD);
+  const relevantDocs = docResults.filter(r => Number(r.similarity) > SIMILARITY_THRESHOLD);
+  const relevantConvs = convResults.filter(r => Number(r.similarity) > SIMILARITY_THRESHOLD);
 
   const ragContext = [
     relevantDocs.length > 0
@@ -57,6 +61,9 @@ export async function POST(req: Request) {
   if (ragContext) {
     systemWithContext = `${systemWithContext}\n\nContext from memory:\n${ragContext}`;
     console.log('RAG context inyectado ✅');
+    console.log('--- CONTEXTO ---');
+    console.log(ragContext);
+    console.log('----------------');
   } else {
     console.log('Sin contexto relevante, respondiendo directo');
   }
