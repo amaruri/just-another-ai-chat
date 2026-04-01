@@ -1,0 +1,6 @@
+{
+  "toolName": "calculate_area",
+  "description": "Calculate geometric shape area",
+  "argsSchema": "{\"shape\":\"string\",\"dimensions\":\"object\"}",
+  "code": "if (args.shape === 'rectangle') return String(args.dimensions.width * args.dimensions.height);\nif (args.shape === 'circle') return String(Math.PI * args.dimensions.radius * args.dimensions.radius);\nif (args.shape === 'triangle') return String(0.5 * args.dimensions.base * args.dimensions.height);\nreturn 'Invalid shape'"
+}

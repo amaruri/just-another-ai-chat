@@ -1,0 +1,6 @@
+{
+  "toolName": "summarize_wiki_article",
+  "description": "Fetches a random Wikipedia article, retrieves its title, and returns a summary.",
+  "argsSchema": "{}",
+  "code": "const response = fetch('https://es.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json');\nconst data = await response.json();\nconst title = data.query.random[0].title;\nconst articleUrl = `https://es.wikipedia.org/wiki/${title}`;\nconst articleResponse = fetch(articleUrl);\nconst articleData = await articleResponse.text();\nreturn articleData;"
+}

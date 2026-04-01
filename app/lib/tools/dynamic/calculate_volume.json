@@ -1,0 +1,6 @@
+{
+  "toolName": "calculate_volume",
+  "description": "Calcula el volumen de figuras tridimensionales",
+  "argsSchema": "{\"shape\": \"string\", \"dimensions\": \"object\"}",
+  "code": "let volume;\nswitch (args.shape.toLowerCase()) {\n  case 'cubo':\n    volume = Math.pow(args.dimensions.lado, 3);\n    break;\n  case 'cilindro':\n    volume = Math.PI * Math.pow(args.dimensions.radio, 2) * args.dimensions.altura;\n    break;\n  case 'esfera':\n    volume = (4/3) * Math.PI * Math.pow(args.dimensions.radio, 3);\n    break;\n  case 'cono':\n    volume = (1/3) * Math.PI * Math.pow(args.dimensions.radio, 2) * args.dimensions.altura;\n    break;\n  case 'prisma':\n    volume = args.dimensions.base_area * args.dimensions.altura;\n    break;\n  case 'piramide':\n    volume = (1/3) * args.dimensions.base_area * args.dimensions.altura;\n    break;\n  default:\n    volume = 'Forma no reconocida';\n}\nreturn String(volume);"
+}

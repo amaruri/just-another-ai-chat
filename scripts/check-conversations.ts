@@ -1,0 +1,13 @@
+import { queryDocuments } from '../app/lib/ddbb/chroma';
+
+async function main() {
+  const results = await queryDocuments({
+    collectionName: 'conversations',
+    text: 'cumpleaños',
+    topK: 3,
+  });
+
+  console.log(JSON.stringify(results, null, 2));
+}
+
+main();

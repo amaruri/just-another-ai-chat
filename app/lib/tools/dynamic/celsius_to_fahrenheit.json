@@ -1,0 +1,6 @@
+{
+  "toolName": "celsius_to_fahrenheit",
+  "description": "Converts Celsius to Fahrenheit",
+  "argsSchema": "{\"value\": \"number\"}",
+  "code": "return String((Number(args.value) * 9/5) + 32)"
+}
