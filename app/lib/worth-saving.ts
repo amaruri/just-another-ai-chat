@@ -1,24 +1,24 @@
-export async function isWorthSaving(userMessage: string): Promise<boolean> {
+export async function isWorthSaving(userMessage: string, model?: string): Promise<boolean> {
   const response = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'qwen3:8b',
+      model: model || 'qwen3:8b',
       stream: false,
       options: { temperature: 0 },
       messages: [
         {
           role: 'system',
           content: `You are a classifier. Answer only "yes" or "no", nothing else. No thinking, no explanation.
-Answer "yes" if the message contains personal facts worth remembering:
-- Name, birthday, age, location
-- Preferences or favorites (food, movies, colors, music)
-- Something the user explicitly wants you to remember
+          Answer "yes" if the message contains personal facts worth remembering:
+          - Name, birthday, age, location
+          - Preferences or favorites (food, movies, colors, music)
+          - Something the user explicitly wants you to remember
 
-Answer "no" if the message is:
-- A question
-- A greeting or small talk
-- A command or task request`,
+          Answer "no" if the message is:
+          - A question
+          - A greeting or small talk
+          - A command or task request`,
         },
         {
           role: 'user',

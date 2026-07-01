@@ -14,9 +14,8 @@ import { isWorthSaving } from '../../lib/worth-saving';
 const SIMILARITY_THRESHOLD = 0.56;
 
 export async function POST(req: Request) {
-  const { messages, activeServers = [] } = await req.json();
+  const { messages, activeServers = [], model } = await req.json();
 
-  // Servers normales — proceso nuevo por request (está bien)
   const regularServers = activeServers.filter((s: string) => s !== "dynamicServers");
   const { tools: mcpTools, cleanup } = await createMCPTools(regularServers);
 
@@ -88,7 +87,7 @@ export async function POST(req: Request) {
   console.log('systemWithContext', systemWithContext);
 
   const result = streamText({
-    model: ollama('qwen3:8b'),
+    model: ollama(model || 'qwen3:8b'),
     maxOutputTokens: 1200,
     messages: await convertToModelMessages(messages),
     system: systemWithContext,
@@ -113,7 +112,7 @@ export async function POST(req: Request) {
             .map((p: { type: string; text: string }) => p.text)
             .join(' ');
 
-          const worthSaving = await isWorthSaving(userText);
+          const worthSaving = await isWorthSaving(userText, model);
 
           if (!worthSaving) {
             console.log('Conversación no es relevante, no se guardará');

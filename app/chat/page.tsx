@@ -4,6 +4,12 @@ import { DefaultChatTransport } from 'ai';
 import { SubmitEvent, useRef, useState } from 'react';
 import { MCP_SERVERS_UI, MCPServerName, SERVER_ICONS } from '../lib/mcp/mcp-config';
 import { ToolCreator } from '../components/ToolCreator';
+import { ChatForm } from '../components/chat/ChatForm';
+import { useChatForm } from '../hooks/useChat';
+import useSWR from 'swr';
+import { SelectModel } from '../components/chat/SelectModel';
+import { useAtom } from 'jotai';
+import { selectedModelAtom } from '../store/models';
 
 function ToolCall({
   part
@@ -51,6 +57,19 @@ function ToolCall({
 }
 
 export default function ChatPage() {
+  const [selectedModel] = useAtom(selectedModelAtom);
+  const transport = new DefaultChatTransport({
+    api: "/api/chat",
+    prepareSendMessagesRequest({ messages }) {
+      return {
+        body: {
+          messages,
+          model: selectedModel,
+          // activeServers: activeServersRef.current,
+        },
+      };
+    },
+  });
   const [input, setInput] = useState('');
   const [activeServers, setActiveServers] = useState<MCPServerName[]>(["filesystem"]);
   const activeServersRef = useRef(activeServers);
@@ -66,34 +85,13 @@ export default function ChatPage() {
 
   console.log('activeServers', activeServers);
 
-  const {
-    messages,
-    sendMessage,
-    status,
-  } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      prepareSendMessagesRequest({ messages }) {
-        return {
-          body: {
-            messages,
-            activeServers: activeServersRef.current,
-          },
-        };
-      },
-    }),
-  });
+  console.log('transport', transport);
+
+  const { messages, status, sendMessage } = useChatForm({ transport });
+
+  console.log('messages from chat page', messages);
 
   const isLoading = status === 'streaming' || status === 'submitted';
-
-  const disableSubmit = isLoading || input.trim() === "";
-
-  const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (disableSubmit) return;
-    sendMessage({ text: input });
-    setInput('');
-  };
 
   const suggestions = [
     "Calculate 1337 * 42",
@@ -101,6 +99,12 @@ export default function ChatPage() {
     "What is sin(90)?",
     "What is the type of pokemon Pikachu?",
   ];
+
+  const { data } = useSWR('/api/ai-models', async (url) => {
+    const response = await fetch(url);
+    const data = await response.json();
+    return data;
+  });
 
   return (
     <div
@@ -168,7 +172,7 @@ export default function ChatPage() {
       </div>
 
       {/* MCP Server Selector */}
-      <div className="flex gap-2 mb-3">
+      {/* <div className="flex gap-2 mb-3">
         {
           MCP_SERVERS_UI.map((server) => {
             const isActive = activeServers.includes(server);
@@ -190,24 +194,11 @@ export default function ChatPage() {
             )
           })
         }
-      </div>
+      </div> */}
 
-      <ToolCreator onToolRegistered={() => console.log("nueva tool disponible")} />
+      {/* <ToolCreator onToolRegistered={() => console.log("nueva tool disponible")} /> */}
 
-      <form
-        onSubmit={handleSubmit}
-        className='flex gap-2'>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.currentTarget.value)}
-          className='flex-1 p-2 border rounded' />
-        <button
-          disabled={disableSubmit}
-          type='submit'
-          className='px-4 py-2 bg-blue-500 text-white rounded'>
-          Send
-        </button>
-      </form>
+      <ChatForm sendMessage={sendMessage} status={status} />
     </div>
   );
 }

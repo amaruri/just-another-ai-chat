@@ -2,8 +2,8 @@ import { queryDocuments } from '../app/lib/ddbb/chroma';
 
 async function main() {
   const results = await queryDocuments({
-    collectionName: 'conversations',
-    text: 'mi nombre',
+    collectionName: 'documents',
+    text: 'AlexNet redes neuronales profundas reconocimiento imagenes',
     topK: 3,
   });
 
